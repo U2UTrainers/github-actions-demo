@@ -6,13 +6,18 @@ trigger:
     include:
       - infra
 
+pool:
+  vmImage: 'windows-latest'
+
 variables:
   azureSubscription: 'azure-michiel-sub-connection'  # Name of the Azure service connection
   resourceGroupName: 'SummarizationApp'
   location: 'swedencentral'
+  azureOpenAIServiceName: 'u2u_summarization_api'
 
 steps:
 - task: AzureResourceManagerTemplateDeployment@3
+  displayName: Deploy resource group
   inputs:
     deploymentScope: 'Subscription'
     azureResourceManagerConnection: 'azure-michiel-sub-connection'
@@ -20,4 +25,17 @@ steps:
     location: 'Sweden Central'
     templateLocation: 'Linked artifact'
     csmFile: 'infra/resource-group.bicep'
+    deploymentMode: 'Incremental'
+- task: AzureResourceManagerTemplateDeployment@3
+  displayName: Deploy Azure OpenAI Resource with GPT-4o-mini
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: 'azure-michiel-sub-connection'
+    subscriptionId: '2886a9e4-7605-419d-84ef-512aa5f4c6fd'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: 'SummarizationApp'
+    location: 'Sweden Central'
+    templateLocation: 'Linked artifact'
+    csmFile: 'infra/azure-openai.bicep'
+    overrideParameters: '-accounts_devops_demo_yt_summarizer_name $(azureOpenAIServiceName)'
     deploymentMode: 'Incremental'
