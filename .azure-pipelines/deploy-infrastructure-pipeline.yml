@@ -1,0 +1,23 @@
+trigger:
+  branches:
+    include:
+    - main  # Assuming your main branch is named 'main'
+  paths:
+    include:
+      - infra
+
+variables:
+  azureSubscription: 'azure-michiel-sub-connection'  # Name of the Azure service connection
+  resourceGroupName: 'SummarizationApp'
+  location: 'swedencentral'
+
+steps:
+- task: AzureResourceManagerTemplateDeployment@3
+  inputs:
+    deploymentScope: 'Subscription'
+    azureResourceManagerConnection: 'azure-michiel-sub-connection'
+    subscriptionId: '2886a9e4-7605-419d-84ef-512aa5f4c6fd'
+    location: 'Sweden Central'
+    templateLocation: 'Linked artifact'
+    csmFile: '../infra/resource-group.bicep'
+    deploymentMode: 'Incremental'
