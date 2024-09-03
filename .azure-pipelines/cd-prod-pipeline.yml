@@ -7,6 +7,9 @@ resources:
       include:
           - main
 
+variables:
+  azureSubscription: 'azure-michiel-sub-connection'  # Name of the Azure service connection
+
 stages:
 - stage: DeployQA
   displayName: Deploy Application to Quality Assurance
