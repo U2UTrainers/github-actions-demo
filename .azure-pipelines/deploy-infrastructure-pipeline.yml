@@ -14,6 +14,7 @@ variables:
   resourceGroupName: 'SummarizationApp'
   location: 'swedencentral'
   azureOpenAIServiceName: 'u2u-summarization-api'
+  webAppName: 'u2u-summarization-api-webapp'
 
 steps:
 - task: AzureResourceManagerTemplateDeployment@3
@@ -22,7 +23,7 @@ steps:
     deploymentScope: 'Subscription'
     azureResourceManagerConnection: 'azure-michiel-sub-connection'
     subscriptionId: '2886a9e4-7605-419d-84ef-512aa5f4c6fd'
-    location: 'Sweden Central'
+    location: '$(location)'
     templateLocation: 'Linked artifact'
     csmFile: 'infra/resource-group.bicep'
     deploymentMode: 'Incremental'
@@ -34,8 +35,40 @@ steps:
     subscriptionId: '2886a9e4-7605-419d-84ef-512aa5f4c6fd'
     action: 'Create Or Update Resource Group'
     resourceGroupName: 'SummarizationApp'
-    location: 'Sweden Central'
+    location: '$(location)'
     templateLocation: 'Linked artifact'
     csmFile: 'infra/azure-openai.bicep'
     overrideParameters: '-accounts_devops_demo_yt_summarizer_name $(azureOpenAIServiceName)'
+    deploymentMode: 'Incremental'
+    deploymentOutputs: 'openAIOutputsJSON'
+- task: PowerShell@2
+  inputs:
+    targetType: 'inline'
+    script: |
+      # Convert the deployment output from JSON string to an object
+      $outputs = "$(bicepOutputs)" | ConvertFrom-Json
+
+      # Extract individual properties
+      $endpoint = $outputs.azureOpenAIDeploymentEndpoint
+      $resourceId = $outputs.azureOpenAIResourceId
+
+      # Write output variables for later steps
+      Write-Host "##vso[task.setvariable variable=deploymentEndpoint]$endpoint"
+      Write-Host "##vso[task.setvariable variable=deploymentResourceId]$resourceId"
+
+      # Optionally, print these values for verification
+      Write-Host "Deployment Endpoint: $endpoint"
+      Write-Host "Deployment Resource ID: $resourceId"
+
+- task: AzureResourceManagerTemplateDeployment@3
+  inputs:
+    deploymentScope: 'Resource Group'
+    azureResourceManagerConnection: 'azure-michiel-sub-connection'
+    subscriptionId: '2886a9e4-7605-419d-84ef-512aa5f4c6fd'
+    action: 'Create Or Update Resource Group'
+    resourceGroupName: 'SummarizationApp'
+    location: '$(location)'
+    templateLocation: 'Linked artifact'
+    csmFile: 'infra/web-app.bicep'
+    overrideParameters: '-webAppName $(webAppName) -azureOpenAIDeploymentEndpoint $(deploymentEndpoint)'
     deploymentMode: 'Incremental'
