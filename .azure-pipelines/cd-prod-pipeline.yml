@@ -39,3 +39,31 @@ stages:
               appName: '$(webAppServiceName)'
               package: '$(Pipeline.Workspace)/SummarizationAPI/*.zip'
               deploymentMethod: 'auto'
+- stage: DeployProd
+  displayName: Deploy Application to Production
+  jobs:
+  - deployment: DeployAppService
+    displayName: 'Deploy to Azure App Service'
+    environment: 'production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              buildType: 'specific'
+              project: 'b5937318-d98d-4816-b0a6-374245b93ca2'
+              definition: '10'
+              buildVersionToDownload: 'latestFromBranch'
+              branchName: 'refs/heads/main'
+              artifactName: 'SummarizationAPI'
+              targetPath: '$(Pipeline.Workspace)/SummarizationAPI'
+          - script: echo '$(webAppServiceName)'
+          - task: AzureWebApp@1
+            displayName: 'Deploy to Azure Web App'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              appType: 'webApp'
+              appName: '$(webAppServiceName)'
+              package: '$(Pipeline.Workspace)/SummarizationAPI/*.zip'
+              deploymentMethod: 'auto'
