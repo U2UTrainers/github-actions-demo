@@ -46,7 +46,7 @@ steps:
     targetType: 'inline'
     script: |
       # Convert the deployment output from JSON string to an object
-      $outputs = "$(bicepOutputs)" | ConvertFrom-Json
+      $outputs = "$(openAIOutputsJSON)" | ConvertFrom-Json
 
       # Extract individual properties
       $endpoint = $outputs.azureOpenAIDeploymentEndpoint
