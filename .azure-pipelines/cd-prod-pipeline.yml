@@ -9,6 +9,7 @@ resources:
 
 variables:
   azureSubscription: 'azure-michiel-sub-connection'  # Name of the Azure service connection
+  group: SummarizationAppVariables
 
 stages:
 - stage: DeployQA
@@ -36,6 +37,6 @@ stages:
             inputs:
               azureSubscription: $(azureSubscription)
               appType: 'webApp'
-              appName: $(webAppName)
+              appName: $(webAppServiceName)
               package: '$(Pipeline.Workspace)/SummarizationAPI/**/*.zip'
               deploymentMethod: 'auto'
