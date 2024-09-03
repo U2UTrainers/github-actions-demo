@@ -41,26 +41,6 @@ steps:
     overrideParameters: '-accounts_devops_demo_yt_summarizer_name $(azureOpenAIServiceName)'
     deploymentMode: 'Incremental'
     deploymentOutputs: 'openAIOutputsJSON'
-- task: PowerShell@2
-  inputs:
-    targetType: 'inline'
-    script: |
-      Write-Host "$(openAIOutputsJSON)"
-      # Convert the deployment output from JSON string to an object
-      $outputs = "$(openAIOutputsJSON)" | ConvertFrom-Json
-
-      # Extract individual properties
-      $endpoint = $outputs.azureOpenAIDeploymentEndpoint
-      $resourceId = $outputs.azureOpenAIResourceId
-
-      # Write output variables for later steps
-      Write-Host "##vso[task.setvariable variable=deploymentEndpoint]$endpoint"
-      Write-Host "##vso[task.setvariable variable=deploymentResourceId]$resourceId"
-
-      # Optionally, print these values for verification
-      Write-Host "Deployment Endpoint: $endpoint"
-      Write-Host "Deployment Resource ID: $resourceId"
-
 - task: AzureResourceManagerTemplateDeployment@3
   inputs:
     deploymentScope: 'Resource Group'
@@ -71,5 +51,5 @@ steps:
     location: '$(location)'
     templateLocation: 'Linked artifact'
     csmFile: 'infra/web-app.bicep'
-    overrideParameters: '-webAppName $(webAppName) -azureOpenAIDeploymentEndpoint $(deploymentEndpoint)'
+    overrideParameters: '-webAppName $(webAppName) -azureOpenAIDeploymentEndpoint https://$(azureOpenAIServiceName).openai.azure.com/'
     deploymentMode: 'Incremental'
