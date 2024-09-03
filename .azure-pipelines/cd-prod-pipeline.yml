@@ -37,6 +37,6 @@ stages:
             inputs:
               azureSubscription: $(azureSubscription)
               appType: 'webApp'
-              appName: $(webAppServiceName)
+              appName: '$(webAppServiceName)'
               package: '$(Pipeline.Workspace)/SummarizationAPI/**/*.zip'
               deploymentMethod: 'auto'
