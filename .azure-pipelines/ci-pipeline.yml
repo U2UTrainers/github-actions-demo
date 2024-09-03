@@ -3,6 +3,9 @@ trigger:
     include:
     - main
     - develop
+  paths:
+    include:
+      - src
 
 variables:
   buildConfiguration: 'release'
