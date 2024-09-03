@@ -8,8 +8,7 @@ resources:
           - main
 
 variables:
-  azureSubscription: 'azure-michiel-sub-connection'  # Name of the Azure service connection
-  group: SummarizationAppVariables
+  -group: SummarizationAppVariables
 
 stages:
 - stage: DeployQA
