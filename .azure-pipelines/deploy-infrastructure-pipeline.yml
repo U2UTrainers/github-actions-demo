@@ -19,5 +19,5 @@ steps:
     subscriptionId: '2886a9e4-7605-419d-84ef-512aa5f4c6fd'
     location: 'Sweden Central'
     templateLocation: 'Linked artifact'
-    csmFile: '../infra/resource-group.bicep'
+    csmFile: 'infra/resource-group.bicep'
     deploymentMode: 'Incremental'
