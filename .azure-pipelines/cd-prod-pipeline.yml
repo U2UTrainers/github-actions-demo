@@ -1,0 +1,38 @@
+resources:
+  pipelines:
+  - pipeline: summarization-app-CI-resource # Name of the pipeline resource.
+    source: summarization-app-CI # The name of the pipeline referenced by this pipeline resource.
+    trigger:
+     branches:
+      include:
+          - main
+
+stages:
+- stage: DeployQA
+  displayName: Deploy Application to Quality Assurance
+  jobs:
+  - deployment: DeployAppService
+    displayName: 'Deploy to Azure App Service'
+    environment: 'QA'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              buildType: 'specific'
+              project: 'b5937318-d98d-4816-b0a6-374245b93ca2'
+              definition: '10'
+              buildVersionToDownload: 'latestFromBranch'
+              branchName: 'refs/heads/main'
+              artifactName: 'SummarizationAPI'
+              targetPath: '$(Pipeline.Workspace)'
+
+          - task: AzureWebApp@1
+            displayName: 'Deploy to Azure Web App'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              appType: 'webApp'
+              appName: $(webAppName)
+              package: '$(Pipeline.Workspace)/SummarizationAPI/**/*.zip'
+              deploymentMethod: 'auto'
