@@ -1,0 +1,2 @@
+# Build status
+[![Build Status](https://dev.azure.com/vibesphere/Demo-Project-24-07/_apis/build/status%2FSummarizationApp%2Fsummarization-app-CI?branchName=main)](https://dev.azure.com/vibesphere/Demo-Project-24-07/_build/latest?definitionId=10&branchName=main)
