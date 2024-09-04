@@ -1,10 +1,26 @@
-triggers:
+trigger:
   branches:
     include:
     - main
     exclude:
     - feature/*
-    paths:
+  paths:
     include:
     - src
 
+variables:
+  buildConfiguration: 'release'
+
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'build'
+    projects: '**/*.csproj'
+    arguments: '--configuration $(buildConfiguration)'
+- task: DotNetCoreCLI@2
+  inputs:
+    command: 'publish'
+    publishWebProjects: true
