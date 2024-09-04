@@ -1,0 +1,10 @@
+triggers:
+  branches:
+    include:
+    - main
+    exclude:
+    - feature/*
+    paths:
+    include:
+    - src
+
