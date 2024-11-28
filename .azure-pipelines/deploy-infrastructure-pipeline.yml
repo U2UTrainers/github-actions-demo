@@ -10,46 +10,62 @@ pool:
   vmImage: 'windows-latest'
 
 variables:
-  azureSubscription: 'azure-michiel-sub-connection'  # Name of the Azure service connection
+  environment: production
+  azureSubscriptionConnection: 'azure-stijn-sub-connection'
+  azureSubscriptionId: '81b37114-2f13-4d8c-829c-b2c208ec56e4'
   resourceGroupName: 'SummarizationApp'
   location: 'swedencentral'
   azureOpenAIServiceName: 'u2u-summarization-api'
   webAppName: 'u2u-summarization-api-webapp'
 
-steps:
-- task: AzureResourceManagerTemplateDeployment@3
-  displayName: Deploy resource group
-  inputs:
-    deploymentScope: 'Subscription'
-    azureResourceManagerConnection: 'azure-michiel-sub-connection'
-    subscriptionId: '2886a9e4-7605-419d-84ef-512aa5f4c6fd'
-    location: '$(location)'
-    templateLocation: 'Linked artifact'
-    csmFile: 'infra/resource-group.bicep'
-    deploymentMode: 'Incremental'
-- task: AzureResourceManagerTemplateDeployment@3
-  displayName: Deploy Azure OpenAI Resource with GPT-4o-mini
-  inputs:
-    deploymentScope: 'Resource Group'
-    azureResourceManagerConnection: 'azure-michiel-sub-connection'
-    subscriptionId: '2886a9e4-7605-419d-84ef-512aa5f4c6fd'
-    action: 'Create Or Update Resource Group'
-    resourceGroupName: 'SummarizationApp'
-    location: '$(location)'
-    templateLocation: 'Linked artifact'
-    csmFile: 'infra/azure-openai.bicep'
-    overrideParameters: '-accounts_devops_demo_yt_summarizer_name $(azureOpenAIServiceName)'
-    deploymentMode: 'Incremental'
-    deploymentOutputs: 'openAIOutputsJSON'
-- task: AzureResourceManagerTemplateDeployment@3
-  inputs:
-    deploymentScope: 'Resource Group'
-    azureResourceManagerConnection: 'azure-michiel-sub-connection'
-    subscriptionId: '2886a9e4-7605-419d-84ef-512aa5f4c6fd'
-    action: 'Create Or Update Resource Group'
-    resourceGroupName: 'SummarizationApp'
-    location: '$(location)'
-    templateLocation: 'Linked artifact'
-    csmFile: 'infra/web-app.bicep'
-    overrideParameters: '-webAppName $(webAppName) -azureOpenAIDeploymentEndpoint https://$(azureOpenAIServiceName).openai.azure.com/'
-    deploymentMode: 'Incremental'
+stages:
+  - stage: Deploy Azure OpenAI with GPT-4o-mini
+    jobs:
+      - deployment: AzureOpenAIDeployment
+        environment: '$(environment)'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureResourceManagerTemplateDeployment@3
+                  displayName: Deploy Azure OpenAI Resource with GPT-4o-mini
+                  inputs:
+                    deploymentScope: 'Resource Group'
+                    azureResourceManagerConnection: '$(azureSubscriptionConnection)'
+                    subscriptionId: '$(azureSubscriptionId)'
+                    action: 'Create Or Update Resource Group'
+                    resourceGroupName: '$(resourceGroupName)'
+                    location: '$(location)'
+                    templateLocation: 'Linked artifact'
+                    csmFile: 'infra/azure-openai.bicep'
+                    overrideParameters: '-accounts_devops_demo_summarizer_name $(azureOpenAIServiceName)'
+                    deploymentMode: 'Incremental'
+                    deploymentOutputs: 'openAIOutputsJSON'
+                - task: PowerShell@2
+                  inputs:
+                    targetType: 'inline'
+                    script: |
+                      $openAIOutputs = ConvertFrom-Json '$(openAIOutputsJSON)'
+                      $openAIEndpoint=$openAIOutputs.azureOpenAIDeploymentEndpoint.value
+                      Write-Host "##vso[task.setvariable variable=azureOpenAIEndpoint;]$openAIEndpoint"
+  
+  - stage: Deploy App Service Plan and Web App
+    jobs:
+    - deployment: AppServiceDeployment
+      environment: '$(environment)'
+      strategy:
+        runOnce:
+          deploy:
+           steps:
+             - task: AzureResourceManagerTemplateDeployment@3
+               inputs:
+                 deploymentScope: 'Resource Group'
+                 azureResourceManagerConnection: '$(azureSubscriptionConnection)'
+                 subscriptionId: '$(azureSubscriptionId)'
+                 action: 'Create Or Update Resource Group'
+                 resourceGroupName: '$(resourceGroupName)'
+                 location: '$(location)'
+                 templateLocation: 'Linked artifact'
+                 csmFile: 'infra/web-app.bicep'
+                 overrideParameters: '-webAppName $(webAppName) -azureOpenAIDeploymentEndpoint $(azureOpenAIEndpoint)'
+                 deploymentMode: 'Incremental'
