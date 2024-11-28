@@ -25,7 +25,7 @@ public class SummariesController : ControllerBase
       Content = request.Content
     };
 
-    string? summary = await _summaryService.GenerateSummary(request.Content);
+    string? summary = await _summaryService.GenerateSummary(request);
 
     response.Summary = summary!;
 

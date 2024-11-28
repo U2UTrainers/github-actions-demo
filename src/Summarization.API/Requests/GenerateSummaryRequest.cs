@@ -2,5 +2,6 @@
 
 public class GenerateSummaryRequest
 {
+  public int MaxNrOfWords { get; set; }
   public string Content { get; set; } = default!;
 }
