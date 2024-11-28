@@ -19,7 +19,7 @@ variables:
   webAppName: 'u2u-summarization-api-webapp'
 
 stages:
-  - stage: Deploy Azure OpenAI with GPT-4o-mini
+  - stage: Deploy_Azure_OpenAI
     jobs:
       - deployment: AzureOpenAIDeployment
         environment: '$(environment)'
@@ -50,7 +50,7 @@ stages:
                       $openAIEndpoint=$openAIOutputs.azureOpenAIDeploymentEndpoint.value
                       Write-Host "##vso[task.setvariable variable=azureOpenAIEndpoint;]$openAIEndpoint"
   
-  - stage: Deploy App Service Plan and Web App
+  - stage: Deploy_Web_App
     jobs:
     - deployment: AppServiceDeployment
       environment: '$(environment)'
