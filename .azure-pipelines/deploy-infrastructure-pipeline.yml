@@ -25,3 +25,15 @@ stages:
       - template: templates/lint-bicep.yml
         parameters:
           bicepFilePath: infra/web-app.bicep
+
+- template: templates/deploy-infrastructure.yml
+  parameters:
+    environmentType: Development
+    resourceGroupName: SummarizationApiDev
+    serviceConnectionName: azure-stijn-sub-connection
+
+- template: templates/deploy-infrastructure.yml
+  parameters:
+    environmentType: Production
+    resourceGroupName: SummarizationApiProd
+    serviceConnectionName: azure-stijn-sub-connection
