@@ -1,0 +1,166 @@
+parameters:
+- name: environmentType
+  type: string
+- name: resourceGroupName
+  type: string
+- name: serviceConnectionName
+  type: string
+- name: deploymentDefaultLocation
+  type: string
+  default: swedencentral
+
+variables:
+  azureOpenAIServiceName: 'u2u-summarization-api'
+  webAppName: 'u2u-summarization-api-webapp'
+
+stages:
+- ${{ if ne(parameters.environmentType, 'Production') }}:
+  - stage: Validate_${{parameters.environmentType}}
+    displayName: Validate (${{parameters.environmentType}} Environment)
+    jobs:
+    - job: ValidateBicepCode
+      displayName: Validate Bicep code
+      steps:
+        - task: AzureResourceManagerTemplateDeployment@3
+          name: RunAzureOpenAIPreflightValidation
+          displayName: Run Azure Open AI preflight validation
+          inputs:
+            connectedServiceName: ${{parameters.serviceConnectionName}}
+            location: ${{parameters.deploymentDefaultLocation}}
+            deploymentMode: Validation
+            resourceGroupName: ${{parameters.resourceGroupName}}
+            csmFile: 'infra/azure-openai.bicep'
+            overrideParameters: >
+             -location ${{parameters.deploymentDefaultLocation}} 
+             -azureOpenAIServiceName $(azureOpenAIServiceName)
+        - task: AzureResourceManagerTemplateDeployment@3
+          name: RunWebAppPreflightValidation
+          displayName: Run Web App preflight validation
+          inputs:
+            connectedServiceName: ${{parameters.serviceConnectionName}}
+            location: ${{parameters.deploymentDefaultLocation}}
+            deploymentMode: Validation
+            resourceGroupName: ${{parameters.resourceGroupName}}
+            csmFile: 'infra/web-app.bicep'
+            overrideParameters: > 
+              -location ${{parameters.deploymentDefaultLocation}} 
+              -webAppName $(webAppName) 
+              -azureOpenAIDeploymentEndpoint 'https://$(azureOpenAIServiceName)-${{parameters.environmentType}}.openai.azure.com/'
+
+- ${{ if eq(parameters.environmentType, 'Production') }}:
+  - stage: Preview_${{parameters.environmentType}}
+    displayName: Preview (${{parameters.environmentType}} Environment)
+    jobs:
+    - job: PreviewAzureChanges
+      displayName: Preview Azure changes
+      steps:
+        - task: AzureCLI@2
+          name: RunAzureOpenAIWhatIf
+          displayName: Run Azure Open AI what-if
+          inputs:
+            azureSubscription: ${{parameters.serviceConnectionName}}
+            scriptType: 'bash'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              az deployment group what-if \
+                --resource-group ${{parameters.resourceGroupName}} \
+                --template-file infra/azure-openai.bicep \
+                --parameters environmentType=${{parameters.environmentType}} location=${{parameters.deploymentDefaultLocation}} azureOpenAIServiceName=$(azureOpenAIServiceName)
+        - task: AzureCLI@2
+          name: RunWebAppWhatIf
+          displayName: Run Web App what-if
+          inputs:
+            azureSubscription: ${{parameters.serviceConnectionName}}
+            scriptType: 'bash'
+            scriptLocation: 'inlineScript'
+            inlineScript: |
+              az deployment group what-if \
+                --resource-group ${{parameters.resourceGroupName}} \
+                --template-file infra/web-app.bicep \
+                --parameters environmentType=${{parameters.environmentType}} location=${{parameters.deploymentDefaultLocation}} webAppName=$(webAppName) azureOpenAIDeploymentEndpoint='https://$(azureOpenAIServiceName).openai.azure.com/'
+
+- stage: Deploy_Azure_Open_AI_${{parameters.environmentType}}
+  displayName: Deploy Azure Open AI (${{parameters.environmentType}} Environment)
+  jobs:
+  - deployment: DeployAzureOpenAIWebsite
+    displayName: Deploy Azure Open AI
+    environment: ${{parameters.environmentType}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+            - checkout: self
+            - task: AzureResourceManagerTemplateDeployment@3
+              displayName: Deploy Azure OpenAI Resource with GPT-4o-mini
+              inputs:
+                deploymentScope: 'Resource Group'
+                azureResourceManagerConnection: '$(azureSubscriptionConnection)'
+                subscriptionId: '$(azureSubscriptionId)'
+                action: 'Create Or Update Resource Group'
+                resourceGroupName: '$(resourceGroupName)'
+                location: '$(location)'
+                templateLocation: 'Linked artifact'
+                csmFile: 'infra/azure-openai.bicep'
+                overrideParameters: '-azureOpenAIServiceName $(azureOpenAIServiceName)'
+                deploymentMode: Incremental
+                deploymentOutputs: openAIOutputsJSON
+            - task: PowerShell@2
+              inputs:
+                targetType: 'inline'
+                script: |
+                  $openAIOutputs = ConvertFrom-Json '$(openAIOutputsJSON)'
+                  $openAIEndpoint=$openAIOutputs.azureOpenAIDeploymentEndpoint.value
+                  Write-Host "##vso[task.setvariable variable=azureOpenAIEndpoint;]$openAIEndpoint"
+
+- stage: Deploy_Web_App_${{parameters.environmentType}}
+  displayName: Deploy Web App (${{parameters.environmentType}} Environment)
+  jobs:
+  - deployment: DeployWebApp
+    displayName: Deploy Web App
+    environment: ${{parameters.environmentType}}
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - task: AzureResourceManagerTemplateDeployment@3
+            inputs:
+              deploymentScope: 'Resource Group'
+              azureResourceManagerConnection: '$(azureSubscriptionConnection)'
+              subscriptionId: '$(azureSubscriptionId)'
+              action: 'Create Or Update Resource Group'
+              resourceGroupName: '$(resourceGroupName)'
+              location: '$(location)'
+              templateLocation: 'Linked artifact'
+              csmFile: 'infra/web-app.bicep'
+              overrideParameters: '-webAppName $(webAppName) -azureOpenAIDeploymentEndpoint $(azureOpenAIEndpoint)'
+              deploymentMode: 'Incremental'
+
+# - stage: SmokeTest_${{parameters.environmentType}}
+#   displayName: Smoke Test (${{parameters.environmentType}} Environment)
+#   jobs:
+#   - job: SmokeTest
+#     displayName: Smoke test
+#     variables:
+#       appServiceAppHostName: $[ stageDependencies.Deploy_${{parameters.environmentType}}.DeployWebsite.outputs['DeployWebsite.SaveDeploymentOutputs.appServiceAppHostName'] ]
+#     steps:
+#       - task: PowerShell@2
+#         name: RunSmokeTests
+#         displayName: Run smoke tests
+#         inputs:
+#           targetType: inline
+#           script: |
+#             $container = New-PesterContainer `
+#               -Path 'deploy/Website.Tests.ps1' `
+#               -Data @{ HostName = '$(appServiceAppHostName)' }
+#             Invoke-Pester `
+#               -Container $container `
+#               -CI
+
+#       - task: PublishTestResults@2
+#         name: PublishTestResults
+#         displayName: Publish test results
+#         condition: always()
+#         inputs:
+#           testResultsFormat: NUnit
+#           testResultsFiles: 'testResults.xml'
