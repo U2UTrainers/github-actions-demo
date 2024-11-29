@@ -9,6 +9,9 @@ trigger:
 pool:
   vmImage: 'windows-latest'
 
+variables:
+  azureOpenAIServiceName: 'u2u-summarization-api'
+  webAppName: 'u2u-summarization-api-webapp'
 
 stages:
 - stage: LintBicep
@@ -31,9 +34,13 @@ stages:
     environmentType: Development
     resourceGroupName: SummarizationApiDev
     serviceConnectionName: azure-stijn-sub-connection
+    webAppName: $(webAppName)
+    azureOpenAIServiceName: $(azureOpenAIServiceName)
 
 - template: templates/deploy-infrastructure.yml
   parameters:
     environmentType: Production
     resourceGroupName: SummarizationApiProd
     serviceConnectionName: azure-stijn-sub-connection
+    webAppName: $(webAppName)
+    azureOpenAIServiceName: $(azureOpenAIServiceName)
