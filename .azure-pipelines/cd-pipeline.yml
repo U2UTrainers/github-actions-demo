@@ -2,21 +2,20 @@ resources:
   pipelines:
   - pipeline: summarization-app-CI-resource # Name of the pipeline resource.
     source: summarization-app-CI # The name of the pipeline referenced by this pipeline resource.
-    trigger:
-     branches:
-      include:
-          - main
+  - pipeline: summarization-app-infrastructure-resource # Name of the pipeline resource.
+    source: summarization-app-infrastructure # The name of the pipeline referenced by this pipeline resource.
 
 variables:
-  -group: SummarizationAppVariables
+  serviceConnectionName:
+  webAppName:
 
 stages:
-- stage: DeployQA
-  displayName: Deploy Application to Quality Assurance
+- stage: Deploy_DEV
+  displayName: Deploy Application to Development
   jobs:
   - deployment: DeployAppService
     displayName: 'Deploy to Azure App Service'
-    environment: 'QA'
+    environment: Development
     strategy:
       runOnce:
         deploy:
@@ -24,8 +23,8 @@ stages:
           - task: DownloadPipelineArtifact@2
             inputs:
               buildType: 'specific'
-              project: 'b5937318-d98d-4816-b0a6-374245b93ca2'
-              definition: '10'
+              project: Demo-Project-24-07
+              pipelineId: '10'
               buildVersionToDownload: 'latestFromBranch'
               branchName: 'refs/heads/main'
               artifactName: 'SummarizationAPI'
@@ -34,7 +33,7 @@ stages:
           - task: AzureWebApp@1
             displayName: 'Deploy to Azure Web App'
             inputs:
-              azureSubscription: $(azureSubscription)
+              azureSubscription: $(serviceConnectionName)
               appType: 'webApp'
               appName: '$(webAppServiceName)'
               package: '$(Pipeline.Workspace)/SummarizationAPI/*.zip'
@@ -44,7 +43,7 @@ stages:
   jobs:
   - deployment: DeployAppService
     displayName: 'Deploy to Azure App Service'
-    environment: 'production'
+    environment: 'Production'
     strategy:
       runOnce:
         deploy:
@@ -52,7 +51,7 @@ stages:
           - task: DownloadPipelineArtifact@2
             inputs:
               buildType: 'specific'
-              project: 'b5937318-d98d-4816-b0a6-374245b93ca2'
+              project: Demo-Project-24-07
               definition: '10'
               buildVersionToDownload: 'latestFromBranch'
               branchName: 'refs/heads/main'
@@ -62,7 +61,7 @@ stages:
           - task: AzureWebApp@1
             displayName: 'Deploy to Azure Web App'
             inputs:
-              azureSubscription: $(azureSubscription)
+              azureSubscription: $(serviceConnectionName)
               appType: 'webApp'
               appName: '$(webAppServiceName)'
               package: '$(Pipeline.Workspace)/SummarizationAPI/*.zip'
