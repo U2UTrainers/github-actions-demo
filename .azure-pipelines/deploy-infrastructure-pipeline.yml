@@ -33,7 +33,7 @@ stages:
   parameters:
     environmentType: Development
     resourceGroupName: SummarizationApiDev
-    serviceConnectionName: azure-stijn-sub-connection
+    serviceConnectionName: azure-stijn-dev-connection
     webAppName: $(webAppName)
     azureOpenAIServiceName: $(azureOpenAIServiceName)
 
@@ -41,6 +41,6 @@ stages:
   parameters:
     environmentType: Production
     resourceGroupName: SummarizationApiProd
-    serviceConnectionName: azure-stijn-sub-connection
+    serviceConnectionName: azure-stijn-prod-connection
     webAppName: $(webAppName)
     azureOpenAIServiceName: $(azureOpenAIServiceName)
