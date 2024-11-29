@@ -30,7 +30,7 @@ stages:
               buildVersionToDownload: 'latestFromBranch'
               branchName: 'refs/heads/main'
               artifactName: 'SummarizationAPI'
-              targetPath: '$(Pipeline.Workspace)/SummarizationAPI'
+              targetPath: '$(Pipeline.Workspace)/SummarizationAPI/'
           - task: AzureWebApp@1
             displayName: 'Deploy to Azure Web App'
             inputs:
