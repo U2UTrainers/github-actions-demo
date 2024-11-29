@@ -11,7 +11,7 @@ resource azureOpenAIResource 'Microsoft.CognitiveServices/accounts@2024-10-01' =
   }
   kind: 'OpenAI'
   properties: {
-    customSubDomainName: azureOpenAIServiceName
+    customSubDomainName: '${azureOpenAIServiceName}-${environmentType}'
     networkAcls: {
       defaultAction: 'Allow'
       virtualNetworkRules: []
