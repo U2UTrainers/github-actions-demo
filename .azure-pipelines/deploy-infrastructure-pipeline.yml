@@ -1,7 +1,7 @@
 trigger:
   branches:
     include:
-    - main  # Assuming your main branch is named 'main'
+    - main
   paths:
     include:
       - infra
@@ -9,65 +9,19 @@ trigger:
 pool:
   vmImage: 'windows-latest'
 
-variables:
-  environment: production
-  azureSubscriptionConnection: 'azure-stijn-sub-connection'
-  azureSubscriptionId: '81b37114-2f13-4d8c-829c-b2c208ec56e4'
-  resourceGroupName: 'SummarizationApp'
-  location: 'swedencentral'
-  azureOpenAIServiceName: 'u2u-summarization-api'
-  webAppName: 'u2u-summarization-api-webapp'
 
 stages:
-  - stage: Deploy_Azure_OpenAI
-    jobs:
-      - deployment: AzureOpenAIDeployment
-        environment: '$(environment)'
-        strategy:
-          runOnce:
-            deploy:
-              steps:
-                - checkout: self
-                - task: AzureResourceManagerTemplateDeployment@3
-                  displayName: Deploy Azure OpenAI Resource with GPT-4o-mini
-                  inputs:
-                    deploymentScope: 'Resource Group'
-                    azureResourceManagerConnection: '$(azureSubscriptionConnection)'
-                    subscriptionId: '$(azureSubscriptionId)'
-                    action: 'Create Or Update Resource Group'
-                    resourceGroupName: '$(resourceGroupName)'
-                    location: '$(location)'
-                    templateLocation: 'Linked artifact'
-                    csmFile: 'infra/azure-openai.bicep'
-                    overrideParameters: '-accounts_devops_demo_summarizer_name $(azureOpenAIServiceName)'
-                    deploymentMode: 'Incremental'
-                    deploymentOutputs: 'openAIOutputsJSON'
-                - task: PowerShell@2
-                  inputs:
-                    targetType: 'inline'
-                    script: |
-                      $openAIOutputs = ConvertFrom-Json '$(openAIOutputsJSON)'
-                      $openAIEndpoint=$openAIOutputs.azureOpenAIDeploymentEndpoint.value
-                      Write-Host "##vso[task.setvariable variable=azureOpenAIEndpoint;]$openAIEndpoint"
-  
-  - stage: Deploy_Web_App
-    jobs:
-    - deployment: AppServiceDeployment
-      environment: '$(environment)'
-      strategy:
-        runOnce:
-          deploy:
-           steps:
-             - checkout: self
-             - task: AzureResourceManagerTemplateDeployment@3
-               inputs:
-                 deploymentScope: 'Resource Group'
-                 azureResourceManagerConnection: '$(azureSubscriptionConnection)'
-                 subscriptionId: '$(azureSubscriptionId)'
-                 action: 'Create Or Update Resource Group'
-                 resourceGroupName: '$(resourceGroupName)'
-                 location: '$(location)'
-                 templateLocation: 'Linked artifact'
-                 csmFile: 'infra/web-app.bicep'
-                 overrideParameters: '-webAppName $(webAppName) -azureOpenAIDeploymentEndpoint $(azureOpenAIEndpoint)'
-                 deploymentMode: 'Incremental'
+- stage: LintBicep
+  jobs:
+    - job: LintAzureOpenAI
+      displayName: Lint Azure Open AI Bicep
+      steps:
+      - template: templates/lint-bicep.yml
+        parameters:
+          bicepFilePath: infra/azure-openai.bicep
+    - job: LintWebApp
+      displayName: Lint Web App Bicep
+      steps:
+      - template: templates/lint-bicep.yml
+        parameters:
+          bicepFilePath: infra/web-app.bicep
