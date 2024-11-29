@@ -1,15 +1,17 @@
-param accounts_devops_demo_summarizer_name string
-param location string = resourceGroup().location
+param azureOpenAIServiceName string
+param location string
+@allowed(['Production', 'Development'])
+param environmentType string
 
-resource accounts_devops_demo_summarizer_name_resource 'Microsoft.CognitiveServices/accounts@2024-10-01' = {
-  name: accounts_devops_demo_summarizer_name
+resource azureOpenAIResource 'Microsoft.CognitiveServices/accounts@2024-10-01' = {
+  name: '${azureOpenAIServiceName}-${environmentType}'
   location: location
   sku: {
     name: 'S0'
   }
   kind: 'OpenAI'
   properties: {
-    customSubDomainName: accounts_devops_demo_summarizer_name
+    customSubDomainName: azureOpenAIServiceName
     networkAcls: {
       defaultAction: 'Allow'
       virtualNetworkRules: []
@@ -19,8 +21,8 @@ resource accounts_devops_demo_summarizer_name_resource 'Microsoft.CognitiveServi
   }
 }
 
-resource accounts_devops_demo_summarizer_name_GPT_4o_mini 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01' = {
-  parent: accounts_devops_demo_summarizer_name_resource
+resource azureOpenAIServiceName_GPT_4o_mini 'Microsoft.CognitiveServices/accounts/deployments@2024-10-01' = {
+  parent: azureOpenAIResource
   name: 'GPT-4o-mini'
   sku: {
     name: 'GlobalStandard'
@@ -37,5 +39,5 @@ resource accounts_devops_demo_summarizer_name_GPT_4o_mini 'Microsoft.CognitiveSe
   }
 }
 
-output azureOpenAIDeploymentEndpoint string = accounts_devops_demo_summarizer_name_resource.properties.endpoint
-output azureOpenAIResourceId string = accounts_devops_demo_summarizer_name_resource.id
+output azureOpenAIDeploymentEndpoint string = azureOpenAIResource.properties.endpoint
+output azureOpenAIResourceId string = azureOpenAIResource.id

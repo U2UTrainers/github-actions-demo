@@ -1,6 +1,8 @@
 param webAppName string
-param location string = resourceGroup().location
+param location string
 param azureOpenAIDeploymentEndpoint string
+@allowed(['Production', 'Development'])
+param environmentType string
 
 @description('This is the built-in Cognitive Services OpenAI User')
 resource azureOpenAIUserRoleDefinition 'Microsoft.Authorization/roleDefinitions@2022-04-01' existing = {
@@ -9,7 +11,7 @@ resource azureOpenAIUserRoleDefinition 'Microsoft.Authorization/roleDefinitions@
 }
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
-  name: 'AppServicePlan-${webAppName}'
+  name: 'AppServicePlan-${webAppName}-${environmentType}'
   location: location
   sku: {
     name: 'F1'
@@ -19,7 +21,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
 }
 
 resource appService 'Microsoft.Web/sites@2023-12-01' = {
-  name: webAppName
+  name: '${webAppName}-${environmentType}'
   location: location
   properties: {
     serverFarmId: appServicePlan.id
