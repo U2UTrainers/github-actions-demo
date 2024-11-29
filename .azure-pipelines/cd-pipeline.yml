@@ -31,7 +31,6 @@ stages:
               branchName: 'refs/heads/main'
               artifactName: 'SummarizationAPI'
               targetPath: '$(Pipeline.Workspace)/SummarizationAPI'
-          - script: echo '$(webAppServiceName)'
           - task: AzureWebApp@1
             displayName: 'Deploy to Azure Web App'
             inputs:
