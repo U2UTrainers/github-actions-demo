@@ -6,8 +6,10 @@ resources:
     source: summarization-app-infrastructure # The name of the pipeline referenced by this pipeline resource.
 
 variables:
-  serviceConnectionName:
-  webAppName:
+  serviceConnectionNameProd: azure-stijn-prod-connection
+  serviceConnectionNameDev: azure-stijn-dev-connection
+  webAppNameProd: u2u-summarization-api-webapp-Production
+  webAppNameDev: u2u-summarization-api-webapp-Development
 
 stages:
 - stage: Deploy_DEV
@@ -33,9 +35,9 @@ stages:
           - task: AzureWebApp@1
             displayName: 'Deploy to Azure Web App'
             inputs:
-              azureSubscription: $(serviceConnectionName)
+              azureSubscription: $(serviceConnectionNameDev)
               appType: 'webApp'
-              appName: '$(webAppServiceName)'
+              appName: '$(webAppNameDev)'
               package: '$(Pipeline.Workspace)/SummarizationAPI/*.zip'
               deploymentMethod: 'auto'
 - stage: DeployProd
@@ -61,8 +63,8 @@ stages:
           - task: AzureWebApp@1
             displayName: 'Deploy to Azure Web App'
             inputs:
-              azureSubscription: $(serviceConnectionName)
+              azureSubscription: $(serviceConnectionNameProd)
               appType: 'webApp'
-              appName: '$(webAppServiceName)'
+              appName: '$(webAppNameProd)'
               package: '$(Pipeline.Workspace)/SummarizationAPI/*.zip'
               deploymentMethod: 'auto'
