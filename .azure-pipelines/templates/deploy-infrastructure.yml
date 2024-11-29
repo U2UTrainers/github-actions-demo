@@ -33,6 +33,7 @@ stages:
             overrideParameters: >
              -location ${{parameters.deploymentDefaultLocation}} 
              -azureOpenAIServiceName ${{parameters.azureOpenAIServiceName}}
+             -environmentType ${{parameters.environmentType}}
         - task: AzureResourceManagerTemplateDeployment@3
           name: RunWebAppPreflightValidation
           displayName: Run Web App preflight validation
@@ -46,6 +47,7 @@ stages:
               -location ${{parameters.deploymentDefaultLocation}} 
               -webAppName ${{parameters.webAppName}} 
               -azureOpenAIDeploymentEndpoint 'https://${{parameters.azureOpenAIServiceName}}-${{parameters.environmentType}}.openai.azure.com/'
+              -environmentType ${{parameters.environmentType}}
 
 - ${{ if eq(parameters.environmentType, 'Production') }}:
   - stage: Preview_${{parameters.environmentType}}
@@ -100,7 +102,10 @@ stages:
                 location: ${{parameters.deploymentDefaultLocation}} 
                 templateLocation: 'Linked artifact'
                 csmFile: 'infra/azure-openai.bicep'
-                overrideParameters: '-azureOpenAIServiceName ${{parameters.azureOpenAIServiceName}}'
+                overrideParameters: >
+                  -location ${{parameters.deploymentDefaultLocation}} 
+                  -azureOpenAIServiceName ${{parameters.azureOpenAIServiceName}}
+                  -environmentType ${{parameters.environmentType}}
                 deploymentMode: Incremental
                 deploymentOutputs: openAIOutputsJSON
             - task: PowerShell@2
@@ -131,7 +136,11 @@ stages:
               location: ${{parameters.deploymentDefaultLocation}} 
               templateLocation: 'Linked artifact'
               csmFile: 'infra/web-app.bicep'
-              overrideParameters: '-webAppName ${{parameters.webAppName}} -azureOpenAIDeploymentEndpoint $(azureOpenAIEndpoint)'
+              overrideParameters: > 
+                -location ${{parameters.deploymentDefaultLocation}} 
+                -webAppName ${{parameters.webAppName}} 
+                -azureOpenAIDeploymentEndpoint 'https://${{parameters.azureOpenAIServiceName}}-${{parameters.environmentType}}.openai.azure.com/'
+                -environmentType ${{parameters.environmentType}}
               deploymentMode: 'Incremental'
 
 # - stage: SmokeTest_${{parameters.environmentType}}
