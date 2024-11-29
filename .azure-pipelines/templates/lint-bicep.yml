@@ -4,6 +4,6 @@ parameters:
 
 steps:
   - script: |
-      az bicep build --file '${{parameters.bicepFilePath}}'
+      az bicep build --file ${{parameters.bicepFilePath}}
     name: LintBicepCode
     displayName: Run Bicep linter
