@@ -94,7 +94,7 @@ stages:
               displayName: Deploy Azure OpenAI Resource with GPT-4o-mini
               inputs:
                 deploymentScope: 'Resource Group'
-                azureResourceManagerConnection: ${{parameters.azureSubscriptionConnection}}
+                azureResourceManagerConnection: ${{parameters.serviceConnectionName}}
                 action: 'Create Or Update Resource Group'
                 resourceGroupName: ${{parameters.resourceGroupName}} 
                 location: ${{parameters.deploymentDefaultLocation}} 
@@ -125,7 +125,7 @@ stages:
           - task: AzureResourceManagerTemplateDeployment@3
             inputs:
               deploymentScope: 'Resource Group'
-              azureResourceManagerConnection: '${{parameters.azureSubscriptionConnection}} '
+              azureResourceManagerConnection: '${{parameters.serviceConnectionName}} '
               action: 'Create Or Update Resource Group'
               resourceGroupName: ${{parameters.resourceGroupName}} 
               location: ${{parameters.deploymentDefaultLocation}} 
