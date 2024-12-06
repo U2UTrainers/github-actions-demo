@@ -7,6 +7,9 @@ trigger:
     include:
       - src
 
+pool:
+  vmImage: 'windows-latest'
+
 variables:
   buildConfiguration: 'release'
 
