@@ -35,7 +35,7 @@ stages:
               azureSubscription: $(serviceConnectionNameDev)
               appType: 'webApp'
               appName: '$(webAppNameDev)'
-              package: '$(Pipeline.Workspace)/SummarizationAPI/*.zip'
+              package: '$(Pipeline.Workspace)/summarization-app-CI/SummarizationAPI/*.zip'
               deploymentMethod: 'auto'
 - stage: DeployProd
   displayName: Deploy Application to Production
@@ -63,5 +63,5 @@ stages:
               azureSubscription: $(serviceConnectionNameProd)
               appType: 'webApp'
               appName: '$(webAppNameProd)'
-              package: '$(Pipeline.Workspace)/SummarizationAPI/*.zip'
+              package: '$(Pipeline.Workspace)/summarization-app-CI/SummarizationAPI/*.zip'
               deploymentMethod: 'auto'
