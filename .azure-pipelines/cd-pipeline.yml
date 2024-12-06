@@ -1,8 +1,8 @@
 resources:
   pipelines:
-  - pipeline: summarization-app-CI-resource # Name of the pipeline resource.
+  - pipeline: summarization-app-CI # Name of the pipeline resource.
     source: summarization-app-CI # The name of the pipeline referenced by this pipeline resource.
-  - pipeline: summarization-app-infrastructure-resource # Name of the pipeline resource.
+  - pipeline: summarization-app-infrastructure # Name of the pipeline resource.
     source: summarization-app-infrastructure # The name of the pipeline referenced by this pipeline resource.
 
 pool:
