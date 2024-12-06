@@ -5,6 +5,9 @@ resources:
   - pipeline: summarization-app-infrastructure-resource # Name of the pipeline resource.
     source: summarization-app-infrastructure # The name of the pipeline referenced by this pipeline resource.
 
+pool:
+  vmImage: 'windows-latest'
+
 variables:
   serviceConnectionNameProd: azure-stijn-prod-connection
   serviceConnectionNameDev: azure-stijn-dev-connection
