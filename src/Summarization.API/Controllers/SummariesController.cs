@@ -31,4 +31,10 @@ public class SummariesController : ControllerBase
 
     return response;
   }
+
+  [HttpGet]
+  public string GetHelloWorld()
+  {
+    return "Hello World";
+  }
 }
