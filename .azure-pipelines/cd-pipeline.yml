@@ -18,7 +18,7 @@ stages:
 - stage: Deploy_DEV
   displayName: Deploy Application to Development
   jobs:
-  - deployment: DeployAppService
+  - deployment: DeployAppServiceDev
     displayName: 'Deploy to Azure App Service'
     environment: Development
     strategy:
@@ -40,7 +40,7 @@ stages:
 - stage: DeployProd
   displayName: Deploy Application to Production
   jobs:
-  - deployment: DeployAppService
+  - deployment: DeployAppServiceProd
     displayName: 'Deploy to Azure App Service'
     environment: 'Production'
     strategy:
