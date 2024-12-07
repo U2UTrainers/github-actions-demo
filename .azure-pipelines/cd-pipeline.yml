@@ -7,6 +7,10 @@ resources:
     source: summarization-app-infrastructure # The name of the pipeline referenced by this pipeline resource.
     trigger: true
 
+trigger: none
+
+pr: none
+
 pool:
   vmImage: 'windows-latest'
 
