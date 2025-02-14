@@ -24,6 +24,19 @@ steps:
     command: 'build'
     projects: '**/*.csproj'
     arguments: '--configuration $(buildConfiguration)'
+- task: SonarCloudPrepare@3
+  inputs:
+    SonarQube: 'SonarQube Cloud'
+    organization: 'vibesphere'
+    scannerMode: 'dotnet'
+    projectKey: 'vibesphere_summarization-app'
+    projectName: 'summarization-app'
+- task: SonarCloudAnalyze@3
+  inputs:
+    jdkversion: 'JAVA_HOME_17_X64'
+- task: SonarCloudPublish@3
+  inputs:
+    pollingTimeoutSec: '300'
 - task: DotNetCoreCLI@2
   displayName: 'Publish project'
   inputs:
