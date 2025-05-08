@@ -1,0 +1,39 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger: none
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- task: AzureKeyVault@2
+  inputs:
+    azureSubscription: 'azure-stijn-dev-connection'
+    KeyVaultName: 'sc-uado-deleteme-kv'
+    SecretsFilter: '*'
+    RunAsPreJob: false
+
+# Show that secrets are not shown in output
+- bash: echo $(mySecret)
+
+- task: CmdLine@2
+  displayName: Create file
+  inputs:
+    script: 'echo $(mySecret) > secret.txt'
+
+- task: CopyFiles@2
+  displayName: Copy file
+  inputs:
+    Contents: secret.txt
+    targetFolder: '$(Build.ArtifactStagingDirectory)'
+
+- task: PublishBuildArtifacts@1
+  displayName: Publish Artifact
+  inputs:
+    PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+    ArtifactName: 'drop'
+    publishLocation: 'Container'
+
