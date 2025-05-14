@@ -33,4 +33,6 @@ app.MapGet("hello-world", () => "Hello World!");
 
 app.MapGet("hello-world/{name}", (string name) => $"Hello {name}!");
 
+app.MapGet("goodbye-world/{name}", (string name) => $"Goodbye {name}!");
+
 app.Run();
