@@ -8,46 +8,40 @@ on:
     paths:
       - 'src/**'
 
-env:
-  BUILD_CONFIGURATION: 'release'
-  DOTNET_OUTPUT_DIR: './published_app'
-
 jobs:
   build:
     runs-on: windows-latest
-
+    
+    env:
+      BUILD_CONFIGURATION: release
+    
     steps:
-    # 1. Checkout the code (Required in GHA)
     - name: Checkout code
       uses: actions/checkout@v4
-
-    # 2. Setup .NET (Recommended to ensure specific SDK versions)
-    # If you need a specific version (e.g., 6.0 or 8.0), uncomment the 'dotnet-version' line.
-    - name: Setup .NET Core
+    
+    - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '8.0.x' 
-        # Leaving version commented uses the pre-installed SDK on windows-latest
-        # global-json-file: global.json # Optional: Remove if you don't have a global.json
-
-    # 3. Restore dependencies
+        dotnet-version: '8.x'  # Adjust to your target version
+    
     - name: Restore dependencies
-      run: dotnet restore **/*.csproj
-
-    # 4. Build project
+      run: dotnet restore
+      working-directory: ./src  # Adjust to where your .sln or .csproj files are
+    
     - name: Build project
-      run: dotnet build **/*.csproj --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
-
-    # 5. Publish project
-    # ADO's 'zipAfterPublish' is handled implicitly by the artifact upload step below.
-    # We publish to a specific folder defined in env.DOTNET_OUTPUT_DIR.
+      run: dotnet build --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore
+      working-directory: ./src
+    
     - name: Publish project
-      run: dotnet publish **/*.csproj --configuration ${{ env.BUILD_CONFIGURATION }} --output ${{ env.DOTNET_OUTPUT_DIR }} --no-build
-
-    # 6. Publish app artifact
-    # This automatically zips the contents of the 'path' directory.
-    - name: Publish app artifact
+      run: dotnet publish --configuration ${{ env.BUILD_CONFIGURATION }} --output ${{ github.workspace }}/publish --no-build
+      working-directory: ./src
+    
+    - name: Zip published output
+      run: Compress-Archive -Path ${{ github.workspace }}/publish/* -DestinationPath ${{ github.workspace }}/SummarizationAPI.zip
+      shell: pwsh
+    
+    - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: SummarizationAPI
-        path: ${{ env.DOTNET_OUTPUT_DIR }}
+        path: ${{ github.workspace }}/SummarizationAPI.zip
